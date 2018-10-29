@@ -198,8 +198,8 @@ context(Ctx, Name, Value) :-
     arg(Arg, Ctx, Value).
 
 modify_context(Ctx0, Mapping, Ctx) :-
-    functor(Ctx0, Name, Arity),
-    functor(Ctx,  Name, Arity),
+    compound_name_arity(Ctx0, Name, Arity),
+    compound_name_arity(Ctx,  Name, Arity),
     modify_context(0, Arity, Ctx0, Mapping, Ctx).
 
 modify_context(Arity, Arity, _, _, _) :- !.
@@ -297,7 +297,7 @@ pp(Dict, Ctx, Options) :-
     ).
 :- endif.
 pp(Term, Ctx, Options) :-               % handle operators
-    functor(Term, Name, Arity),
+    compound_name_arity(Term, Name, Arity),
     current_op(Prec, Type, Name),
     match_op(Type, Arity, Kind, Prec, Left, Right),
     option(operators(true), Options),
@@ -367,7 +367,7 @@ pp(Term, Ctx, Options) :-               % compound
         option(right_margin(RM), Options),
         Indent + Width < RM         % fits on a line, simply write
     ->  pprint(Term, Ctx, Options)
-    ;   Term =.. [Name|Args],
+    ;   compound_name_arguments(Term, Name, Args),
         format(atom(Buf2), '~q(', [Name]),
         write(Out, Buf2),
         atom_length(Buf2, FunctorIndent),
@@ -413,6 +413,7 @@ pp_list_elements([H|T], Ctx0, Options) :-
     ).
 
 
+pp_compound_args([], _, _) :- !.
 pp_compound_args([H|T], Ctx, Options) :-
     pp(H, Ctx, Options),
     (   T == []
