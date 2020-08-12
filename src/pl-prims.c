@@ -238,6 +238,8 @@ Returns one of:
 			of trail-space.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+#define SWAPW(p,q) { Word _tmp = p; p=q; q=_tmp; } while(0)
+
 static int
 do_unify(Word t1, Word t2 ARG_LD)
 { term_agendaLR agenda;
@@ -256,20 +258,34 @@ do_unify(Word t1, Word t2 ARG_LD)
 	  });
 
     if ( isVar(w1) )
-    { if ( unlikely(tTop+1 >= tMax) )
+    { if ( unlikely(tTop+2 >= tMax) )
       { rc = TRAIL_OVERFLOW;
 	goto out_fail;
       }
 
       if ( isVar(w2) )
-      { if ( t1 < t2 )			/* always point downwards */
-	{ Trail(t2, makeRef(t1));
+      { uvars:
+	if ( t1 < t2 )			/* always point downwards */
+	{ if ( t1 > (Word)lBase )
+	  { Word v;
+
+	    if ( unlikely(gTop+1 >= gMax) )
+	    { rc = GLOBAL_OVERFLOW;
+	      goto out_fail;
+	    }
+	    v = gTop++;
+	    setVar(*v);
+	    Trail(t1, makeRef(v));
+	    Trail(t2, makeRef(v));
+	  } else
+	  { Trail(t2, makeRef(t1));
+	  }
 	  continue;
 	}
 	if ( t1 == t2 )
 	  continue;
-	Trail(t1, makeRef(t2));
-	continue;
+	SWAPW(t1, t2);
+	goto uvars;
       }
   #ifdef O_ATTVAR
       if ( isAttVar(w2 ) )
