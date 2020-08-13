@@ -53,6 +53,7 @@
 	compileTermToHeap__LD(t, NULL, NULL, f PASS_LD)
 #define globalizeTermRef(t)	globalize_term_ref__LD(t PASS_LD)
 #define linkVal(p)		linkVal__LD(p PASS_LD)
+#define linkValG(p)		linkValG__LD(p PASS_LD)
 #define TrailAssignment(p)	TrailAssignment__LD(p PASS_LD)
 #define bindConst(p, c)		bindConst__LD(p, c PASS_LD)
 #define consPtr(p, ts)		consPtr__LD(p, ts PASS_LD)

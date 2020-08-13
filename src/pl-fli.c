@@ -142,6 +142,47 @@ linkVal__LD(Word p ARG_LD)
 }
 
 
+word
+linkValG__LD(Word p ARG_LD)
+{ word w;
+
+retry:
+  w = *p;
+  while( isRef(w) )
+  { p = unRef(w);
+    if ( needsRef(*p) )
+      return w;
+    w = *p;
+  }
+
+  if ( unlikely(needsRef(w)) )
+  { if ( unlikely(p > (Word)lBase) )
+    { Word v;
+
+      if ( !hasGlobalSpace(1) )
+      { int rc; PushPtr(p);
+	rc = makeMoreStackSpace(GLOBAL_OVERFLOW, ALLOW_GC);
+	PopPtr(p);
+	if ( !rc )
+	  return 0;
+	goto retry;
+      }
+
+      v = gTop++;
+      setVar(*v);
+      w = makeRefG(v);
+      Trail(p, w);
+      return w;
+    }
+    return makeRefG(p);
+  }
+
+  DEBUG(CHK_ATOM_GARBAGE_COLLECTED, assert(w != ATOM_garbage_collected));
+
+  return w;
+}
+
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 term_t pushWordAsTermRef(Word p)
        popTermRef()
