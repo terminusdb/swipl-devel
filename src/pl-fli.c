@@ -1150,6 +1150,10 @@ PL_same_compound(term_t t1, term_t t2)
 		 *	       CONS-*		*
 		 *******************************/
 
+/* `to` is a pointer into a (new) compound
+   `p` may be anything.
+*/
+
 static inline void
 bindConsVal(Word to, Word p ARG_LD)
 { deRef(p);
@@ -1159,7 +1163,7 @@ bindConsVal(Word to, Word p ARG_LD)
     { setVar(*to);
       *p = makeRefG(to);
     } else
-      *to = makeRef(p);
+      *to = makeRefG(p);
   } else
     *to = *p;
 }
@@ -4097,8 +4101,10 @@ error if it encounters a term <m>:<t>, where <m> is not an atom.
 
 int
 PL_strip_module_ex__LD(term_t raw, module_t *m, term_t plain ARG_LD)
-{ Word p = valTermRef(raw);
+{ Word p;
 
+  globalizeTermRef(raw);
+  p = valTermRef(raw);
   deRef(p);
   if ( hasFunctor(*p, FUNCTOR_colon2) )
   { if ( !(p = stripModule(p, m, 0 PASS_LD)) )
@@ -4106,7 +4112,7 @@ PL_strip_module_ex__LD(term_t raw, module_t *m, term_t plain ARG_LD)
     if ( hasFunctor(*p, FUNCTOR_colon2) )
     { Word a1 = argTermP(*p, 0);
       deRef(a1);
-      setHandle(plain, needsRef(*a1) ? makeRef(a1) : *a1);
+      setHandle(plain, needsRef(*a1) ? makeRefG(a1) : *a1);
       return PL_type_error("module", plain);
     }
     setHandle(plain, linkVal(p));
@@ -4114,7 +4120,7 @@ PL_strip_module_ex__LD(term_t raw, module_t *m, term_t plain ARG_LD)
   { if ( *m == NULL )
       *m = environment_frame ? contextModule(environment_frame)
 			     : MODULE_user;
-    setHandle(plain, needsRef(*p) ? makeRef(p) : *p);
+    setHandle(plain, needsRef(*p) ? makeRefG(p) : *p);
   }
 
   return TRUE;
