@@ -1005,15 +1005,9 @@ VMI(B_VAR, 0, 1, (CA1_VAR))
 bvar_cont:
   p = varFrameP(FR, voffset);
   if ( isVar(*p) )
-  { Word v;
-    word w;
-
-    ENSURE_GLOBAL_SPACE(1, p = varFrameP(FR, voffset));
-    v = gTop++;
-    setVar(*v);
-    w = makeRefG(v);
-    Trail(p, w);
-    *ARGP++ = w;
+  { ENSURE_GLOBAL_SPACE(1, p = varFrameP(FR, voffset));
+    globaliseVar(p);
+    *ARGP++ = *p;
   } else
   { *ARGP++ = linkVal(p);
   }
