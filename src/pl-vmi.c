@@ -1332,9 +1332,15 @@ trailing needed as we are writing in this and the next frame.
 
 VMI(B_FIRSTVAR, 0, 1, (CA1_FVAR))
 { Word k = varFrameP(FR, *PC++);
+  Word v;
+  word w;
 
-  setVar(*k);
-  *ARGP++ = makeRefL(k);
+  ENSURE_GLOBAL_SPACE(1, k = varFrameP(FR, PC[-1]));
+  v = gTop++;
+  setVar(*v);
+  w = makeRefG(v);
+  *k = w;
+  *ARGP++ = w;
   NEXT_INSTRUCTION;
 }
 

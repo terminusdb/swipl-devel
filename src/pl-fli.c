@@ -124,7 +124,17 @@ linkVal__LD(Word p ARG_LD)
   }
 
   if ( unlikely(needsRef(w)) )
-    return makeRef(p);
+  { if ( unlikely(p > (Word)lBase) )
+    { Word v = gTop++;
+
+      assert(gTop < gMax);		/* TBD: ensure in caller */
+      setVar(*v);
+      w = makeRefG(v);
+      Trail(p, w);
+      return w;
+    }
+    return makeRefG(p);
+  }
 
   DEBUG(CHK_ATOM_GARBAGE_COLLECTED, assert(w != ATOM_garbage_collected));
 

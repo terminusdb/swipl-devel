@@ -3,7 +3,7 @@
     Author:        Jan Wielemaker
     E-mail:        J.Wielemaker@vu.nl
     WWW:           http://www.swi-prolog.org
-    Copyright (c)  1985-2019, University of Amsterdam
+    Copyright (c)  1985-2020, University of Amsterdam
                               VU University Amsterdam
 			      CWI, Amsterdam
     All rights reserved.
@@ -157,6 +157,9 @@ recordMark__LD(Word p ARG_LD)
 #define markLocal(p) (local_marked++)
 #define processLocal(p) (local_marked--)
 #endif
+
+#undef makeRefL				/* for GC we do allow local refs */
+#define makeRefL(p)	consPtr(p, TAG_REFERENCE|STG_LOCAL)
 
 #define ldomark(p)	{ *(p) |= MARK_MASK; }
 #define domark(p)	{ if ( is_marked(p) ) \
