@@ -168,16 +168,16 @@ code into functions.
 	  onchange;					\
 	}
 
-#define globaliseVar(p)             \
-	do { Word v = gTop++;       \
-	     setVar(*v);            \
-	     Trail(p, makeRefG(v)); \
+#define globaliseVar(p)               \
+	do { Word __v = gTop++;       \
+	     setVar(*__v);            \
+	     Trail(p, makeRefG(__v)); \
 	   } while(0)
 
-#define globaliseFirstVar(p)        \
-	do { Word v = gTop++;       \
-	     setVar(*v);            \
-	     *p = makeRefG(v);      \
+#define globaliseFirstVar(p)          \
+	do { Word __v = gTop++;       \
+	     setVar(*__v);            \
+	     *p = makeRefG(__v);      \
 	   } while(0)
 
 
