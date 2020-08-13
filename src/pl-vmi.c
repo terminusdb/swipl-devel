@@ -4383,14 +4383,20 @@ which is translated to:
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(I_CATCH, 0, 0, ())
-{ if ( BFR->frame == FR && BFR == (Choice)argFrameP(FR, 3) )
+{ Word p = argFrameP(FR, 0);
+
+  if ( BFR->frame == FR && BFR == (Choice)argFrameP(FR, 3) )
   { assert(BFR->type == CHP_DEBUG);
     BFR->type = CHP_CATCH;
   } else
     newChoice(CHP_CATCH, FR PASS_LD);
 
+  if ( isVar(*p) )
+  { PL_error(NULL, 0, NULL, ERR_INSTANTIATION);
+    THROW_EXCEPTION;
+  }
 				  /* = B_VAR0 */
-  *argFrameP(lTop, 0) = linkVal(argFrameP(FR, 0));
+  *argFrameP(lTop, 0) = linkVal(p);
   VMI_GOTO(I_USERCALL0);
 }
 
