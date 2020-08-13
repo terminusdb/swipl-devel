@@ -1196,9 +1196,14 @@ VMI(B_UNIFY_FC, VIF_BREAK, 2, (CA1_FVAR, CA1_DATA))
   word c = (word)*PC++;
 
   if ( LD->slow_unify )
-  { setVar(*v1);
+  { Word gv;
+
+    ENSURE_GLOBAL_SPACE(1, v1 = varFrameP(FR, PC[-1]));
+    gv = gTop++;
+    setVar(*gv);
+    *v1 = makeRefG(gv);
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
+    *ARGP++ = *v1;
     *ARGP++ = c;
     goto debug_equals2;
   }
