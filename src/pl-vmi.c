@@ -3523,7 +3523,7 @@ VMI(A_ADD_FC, VIF_BREAK, 3, (CA1_FVAR, CA1_VAR, CA1_INTEGER))
   if ( debugstatus.debugging )
   { Word expr;
 
-    ENSURE_GLOBAL_SPACE(3,
+    ENSURE_GLOBAL_SPACE(4,
 			{ np = varFrameP(FR, PC[-2]);
 			  rp = varFrameP(FR, PC[-3]);
 			});
@@ -3534,8 +3534,8 @@ VMI(A_ADD_FC, VIF_BREAK, 3, (CA1_FVAR, CA1_VAR, CA1_INTEGER))
     expr[2] = consInt(add);
 
     ARGP = argFrameP(lTop, 0);
-    setVar(*rp);
-    *ARGP++ = linkVal(rp);
+    globaliseFirstVar(rp);
+    *ARGP++ = *rp;
     *ARGP++ = consPtr(expr, TAG_COMPOUND|STG_GLOBAL);
     NFR = lTop;
     DEF = GD->procedures.is2->definition;
