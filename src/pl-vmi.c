@@ -969,28 +969,45 @@ variable, so we either copy the value   or make a reference. Trailing is
 not needed as we are writing above the stack.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+BEGIN_SHAREDVARS
+int voffset;
 VMI(B_VAR0, 0, 0, ())
-{ *ARGP++ = linkVal(varFrameP(FR, VAROFFSET(0)));
-  NEXT_INSTRUCTION;
+{ voffset = VAROFFSET(0);
+  goto bvar_cont;
 }
 
 VMI(B_VAR1, 0, 0, ())
-{ *ARGP++ = linkVal(varFrameP(FR, VAROFFSET(1)));
-  NEXT_INSTRUCTION;
+{ voffset = VAROFFSET(1);
+  goto bvar_cont;
 }
 
 VMI(B_VAR2, 0, 0, ())
-{ *ARGP++ = linkVal(varFrameP(FR, VAROFFSET(2)));
-  NEXT_INSTRUCTION;
+{ voffset = VAROFFSET(2);
+  goto bvar_cont;
 }
 
 VMI(B_VAR, 0, 1, (CA1_VAR))
-{ int n = (int)*PC++;
+{ Word p;
+  voffset = (int)*PC++;
 
-  *ARGP++ = linkVal(varFrameP(FR, n));
+bvar_cont:
+  p = varFrameP(FR, voffset);
+  if ( isVar(*p) )
+  { Word v;
+    word w;
+
+    ENSURE_GLOBAL_SPACE(1, p = varFrameP(FR, voffset));
+    v = gTop++;
+    setVar(*v);
+    w = makeRefG(v);
+    Trail(p, w);
+    *ARGP++ = w;
+  } else
+  { *ARGP++ = linkVal(p);
+  }
   NEXT_INSTRUCTION;
 }
-
+END_SHAREDVARS
 
 #ifdef O_COMPILE_IS
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
