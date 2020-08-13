@@ -239,6 +239,11 @@ and while loading .wic files.  It comes at no price.
 #define needsRef(w)	isVar(w)
 #endif
 
+/* We use local references during GC and shift */
+#define makeRefLok(p)	consPtr(p, TAG_REFERENCE|STG_LOCAL)
+#define makeRefLG(p)	((void*)(p) >= (void*)lBase ? makeRefLok(p) : makeRefG(p))
+#define unRefLG(w)	((Word)valPtr(w))
+
 
 		 /*******************************
 		 *	COMPOUNDS AND LISTS	*
