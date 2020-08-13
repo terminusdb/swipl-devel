@@ -3964,7 +3964,8 @@ term is to be written.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   term = alloc_term(_PL_rd PASS_LD);
-  PL_put_term(tail, term);
+  if ( !PL_put_term(tail, term) )
+    return FALSE;
 
   for(;;)
   { int rc;
