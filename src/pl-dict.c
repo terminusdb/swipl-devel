@@ -688,7 +688,11 @@ PL_get_dict_ex(term_t data, term_t tag, term_t dict, int flags)
 
     if ( len < 0 )
       return FALSE;			/* not a proper list */
-  retry:
+
+    if ( unlikely(tTop+1 >= tMax) )
+    { if ( !makeMoreStackSpace(TRAIL_OVERFLOW, ALLOW_GC|ALLOW_SHIFT) )
+	return FALSE;
+    }
     if ( !(m = allocGlobal(len*2+2)) )
       return FALSE;			/* global overflow */
     ap = m;
@@ -696,17 +700,17 @@ PL_get_dict_ex(term_t data, term_t tag, term_t dict, int flags)
     if ( tag )
     { Word cp = valTermRef(tag);
 
-      *ap = linkVal(cp);		/* TBD: maybe move to another function */
-      if ( tagex(*ap) == (TAG_REFERENCE|STG_LOCAL) )
-      { if ( unlikely(tTop+1 >= tMax) )
-	{ if ( !makeMoreStackSpace(TRAIL_OVERFLOW, ALLOW_GC|ALLOW_SHIFT) )
-	    return FALSE;
-	  gTop = m;
-	  goto retry;
+      deRef(cp);
+      if ( needsRef(*cp) )
+      { if ( isVar(*cp) )
+	{ setVar(*ap);
+	  Trail(cp, makeRef(ap));
+	} else
+	{ assert(onStack(global, cp));
+	  *ap = makeRefG(cp);
 	}
-	deRef(cp)
-	setVar(*ap);
-	Trail(cp, makeRef(ap));
+      } else
+      { *ap = *cp;
       }
     } else
     { setVar(*ap);
