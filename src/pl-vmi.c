@@ -2051,7 +2051,12 @@ VMI(I_YIELD, VIF_BREAK, 0, ())
 
   QF->foreign_frame = PL_open_foreign_frame();
   QF->yield.term = PL_new_term_ref();
-  *valTermRef(QF->yield.term) = linkVal(argFrameP(FR, 0));
+  p = argFrameP(FR, 0);
+  if ( isVar(*p) )
+  { ENSURE_GLOBAL_SPACE(1, p = argFrameP(FR, 0));
+    globaliseVar(p);
+  }
+  *valTermRef(QF->yield.term) = linkVal(p);
   DEBUG(CHK_SECURE, checkStacks(NULL));
 
   assert(LD->exception.throw_environment == &throw_env);
