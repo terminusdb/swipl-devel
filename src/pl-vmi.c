@@ -1272,9 +1272,16 @@ VMI(B_EQ_VV, VIF_BREAK, 2, (CA1_VAR,CA1_VAR))
 
 #ifdef O_DEBUGGER
   if ( debugstatus.debugging )
-  { ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
-    *ARGP++ = linkVal(v2);
+  { if ( isVar(*v1) || isVar(*v2) )
+    { ENSURE_GLOBAL_SPACE(2, { v1 = varFrameP(FR, (int)PC[-2]);
+			       v2 = varFrameP(FR, (int)PC[-1]);
+			     });
+      if ( isVar(*v1) ) globaliseVar(v1);
+      if ( isVar(*v2) ) globaliseVar(v2);
+    }
+    ARGP = argFrameP(lTop, 0);
+    *ARGP++ = *v1;
+    *ARGP++ = *v2;
   debug_eq_vv:
     NFR = lTop;
     DEF = GD->procedures.strict_equal2->definition;
@@ -1302,8 +1309,13 @@ VMI(B_EQ_VC, VIF_BREAK, 2, (CA1_VAR,CA1_DATA))
 
 #ifdef O_DEBUGGER
   if ( debugstatus.debugging )
-  { ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
+  { if ( isVar(*v1) )
+    { ENSURE_GLOBAL_SPACE(1, v1 = varFrameP(FR, (int)PC[-2]));
+      globaliseVar(v1);
+    }
+
+    ARGP = argFrameP(lTop, 0);
+    *ARGP++ = *v1;
     *ARGP++ = c;
     goto debug_eq_vv;
   }
