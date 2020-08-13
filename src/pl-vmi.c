@@ -1071,10 +1071,19 @@ VMI(B_UNIFY_FF, VIF_BREAK, 2, (CA1_FVAR,CA1_FVAR))
     *ARGP++ = linkVal(v1);
     *ARGP++ = linkVal(v2);
     goto debug_equals2;
-  }
+  } else
+  { Word v;
+    word w;
 
-  setVar(*v1);
-  *v2 = makeRefL(v1);
+    ENSURE_GLOBAL_SPACE(1, { v1 = varFrameP(FR, PC[-2]);
+			     v2 = varFrameP(FR, PC[-1]);
+			   });
+    v = gTop++;
+    setVar(*v);
+    w = makeRefG(v);
+    *v1 = w;
+    *v2 = w;
+  }
 
   NEXT_INSTRUCTION;
 }
