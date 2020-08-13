@@ -5154,7 +5154,7 @@ frame.
     }
 
     ARGP = argFrameP(NFR, 0);
-
+					/* args is pointer into term: ok */
     for(; arity-- > 0; ARGP++, args++)
       *ARGP = linkVal(args);
   }
@@ -5219,9 +5219,15 @@ Where '$reset' maps to
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(I_RESET, 0, 0, ())
-{ set(FR, FR_INRESET);
+{ Word p = argFrameP(FR, 0);
+
+  if ( isVar(*p) )
+  { PL_error(NULL, 0, NULL, ERR_INSTANTIATION);
+    THROW_EXCEPTION;
+  }
+  set(FR, FR_INRESET);
 			  /* = B_VAR0 */
-  *argFrameP(lTop, 0) = linkVal(argFrameP(FR, 0));
+  *argFrameP(lTop, 0) = linkVal(p);
   VMI_GOTO(I_USERCALL0);
 }
 
