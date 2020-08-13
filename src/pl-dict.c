@@ -311,15 +311,15 @@ assign_in_dict(Word dp, Word val ARG_LD)
   if ( !canBind(*val) )
   { *dp = *val;
   } else if ( isAttVar(*val) )
-  { *dp = makeRef(val);
+  { *dp = makeRefG(val);
   } else
   { if ( dp < val )
     { if ( unlikely(tTop+1 >= tMax) )
 	return TRAIL_OVERFLOW;
       setVar(*dp);
-      Trail(val, makeRef(dp));
+      Trail(val, makeRefG(dp));
     } else
-    { *dp = makeRef(val);
+    { *dp = makeRefG(val);
     }
   }
 
@@ -704,7 +704,7 @@ PL_get_dict_ex(term_t data, term_t tag, term_t dict, int flags)
       if ( needsRef(*cp) )
       { if ( isVar(*cp) )
 	{ setVar(*ap);
-	  Trail(cp, makeRef(ap));
+	  Trail(cp, makeRefG(ap));
 	} else
 	{ assert(onStack(global, cp));
 	  *ap = makeRefG(cp);
