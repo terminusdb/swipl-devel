@@ -174,6 +174,12 @@ code into functions.
 	     Trail(p, makeRefG(v)); \
 	   } while(0)
 
+#define globaliseFirstVar(p)        \
+	do { Word v = gTop++;       \
+	     setVar(*v);            \
+	     *p = makeRefG(v);      \
+	   } while(0)
+
 
 		 /*******************************
 		 *	    DEBUGGING		*
@@ -1203,23 +1209,19 @@ need for wakeup.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(B_UNIFY_FC, VIF_BREAK, 2, (CA1_FVAR, CA1_DATA))
-{ Word v1 = varFrameP(FR, (int)*PC++);
+{ Word f = varFrameP(FR, (int)*PC++);
   word c = (word)*PC++;
 
   if ( LD->slow_unify )
-  { Word gv;
-
-    ENSURE_GLOBAL_SPACE(1, v1 = varFrameP(FR, PC[-1]));
-    gv = gTop++;
-    setVar(*gv);
-    *v1 = makeRefG(gv);
+  { ENSURE_GLOBAL_SPACE(1, f = varFrameP(FR, PC[-1]));
+    globaliseFirstVar(f);
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = *v1;
+    *ARGP++ = *f;
     *ARGP++ = c;
     goto debug_equals2;
   }
 
-  *v1 = c;
+  *f = c;
   NEXT_INSTRUCTION;
 }
 
@@ -1234,12 +1236,8 @@ VMI(B_UNIFY_VC, VIF_BREAK, 2, (CA1_VAR, CA1_DATA))
 
   if ( LD->slow_unify )
   { if ( isVar(*k) )
-    { Word v;
-
-      ENSURE_GLOBAL_SPACE(1, k = varFrameP(FR, (int)PC[-2]));
-      v = gTop++;
-      setVar(*v);
-      Trail(k, makeRefG(v));
+    { ENSURE_GLOBAL_SPACE(1, k = varFrameP(FR, (int)PC[-2]));
+      globaliseVar(k);
     }
     ARGP = argFrameP(lTop, 0);
     *ARGP++ = *k;
