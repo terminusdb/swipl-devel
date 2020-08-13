@@ -127,6 +127,10 @@ linkVal__LD(Word p ARG_LD)
   { if ( unlikely(p > (Word)lBase) )
     { Word v = gTop++;
 
+#ifdef O_DEBUG
+      Sdprintf("linkVal() needs to globalize\n");
+      trap_gdb();
+#endif
       assert(gTop < gMax);		/* TBD: ensure in caller */
       setVar(*v);
       w = makeRefG(v);
