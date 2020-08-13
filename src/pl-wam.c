@@ -2094,23 +2094,6 @@ copyFrameArguments(LocalFrame from, LocalFrame to, size_t argc ARG_LD)
   ARGS = argFrameP(from, 0);
   ARGE = ARGS+argc;
   ARGD = argFrameP(to, 0);
-  for( ; ARGS < ARGE; ARGS++, ARGD++) /* dereference the block */
-  { word k = *ARGS;
-
-    if ( isRefL(k) )
-    { Word p = unRefL(k);
-
-      if ( p > (Word)to )
-      { if ( isVar(*p) )
-	{ *p = makeRefL(ARGD);
-	  setVar(*ARGS);
-	} else
-	  *ARGS = *p;
-      }
-    }
-  }
-  ARGS = argFrameP(from, 0);
-  ARGD = argFrameP(to, 0);
   while( ARGS < ARGE )			/* now copy them */
     *ARGD++ = *ARGS++;
 }
