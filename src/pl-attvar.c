@@ -78,7 +78,7 @@ PL_get_attr__LD(term_t t, term_t a ARG_LD)
   if ( isAttVar(*p) )
   { Word ap = valPAttVar(*p);
 
-    *valTermRef(a) = makeRef(ap);	/* reference, so we can assign */
+    *valTermRef(a) = makeRefG(ap);	/* reference, so we can assign */
     succeed;
   }
 
@@ -109,8 +109,8 @@ registerWakeup(Word name, Word value ARG_LD)
   wake = gTop;
   gTop += 4;
   wake[0] = FUNCTOR_wakeup3;
-  wake[1] = needsRef(*name) ? makeRef(name) : *name;
-  wake[2] = needsRef(*value) ? makeRef(value) : *value;
+  wake[1] = needsRef(*name) ? makeRefG(name) : *name;
+  wake[2] = needsRef(*value) ? makeRefG(value) : *value;
   wake[3] = ATOM_nil;
 
   if ( *tail )
@@ -120,7 +120,7 @@ registerWakeup(Word name, Word value ARG_LD)
     TrailAssignment(t);
     *t = consPtr(wake, TAG_COMPOUND|STG_GLOBAL);
     TrailAssignment(tail);		/* on local stack! */
-    *tail = makeRef(wake+3);
+    *tail = makeRefG(wake+3);
     DEBUG(MSG_WAKEUP,
 	  { char buf[32];
 	    Sdprintf("appended wakeup %s\n", print_addr(wake, buf));
@@ -132,7 +132,7 @@ registerWakeup(Word name, Word value ARG_LD)
     TrailAssignment(head);		/* See (*) */
     *head = consPtr(wake, TAG_COMPOUND|STG_GLOBAL);
     TrailAssignment(tail);
-    *tail = makeRef(wake+3);
+    *tail = makeRefG(wake+3);
     LD->alerted |= ALERT_WAKEUP;
     DEBUG(MSG_WAKEUP,
 	  { char buf[32];
@@ -193,7 +193,7 @@ assignAttVar(Word av, Word value ARG_LD)
   TrailAssignment(av);
   if ( isAttVar(*value) )
   { DEBUG(1, Sdprintf("Unifying two attvars\n"));
-    *av = makeRef(value);
+    *av = makeRefG(value);
   } else
     *av = *value;
 
