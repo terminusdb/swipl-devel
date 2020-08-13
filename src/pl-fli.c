@@ -317,6 +317,30 @@ PL_new_nil_ref(void)
 }
 
 
+int
+globalize_term_ref__LD(term_t t ARG_LD)
+{ Word p;
+
+retry:
+  p = valTermRef(t);
+  if ( unlikely(isVar(*p)) )
+  { Word v;
+
+    if ( !hasGlobalSpace(1) )
+    { if ( !ensureGlobalSpace(1, ALLOW_GC) )
+	return FALSE;
+      goto retry;
+    }
+    v = gTop++;
+    setVar(*v);
+    Trail(p, makeRefG(v));
+  }
+
+  return TRUE;
+}
+
+
+
 #define PL_new_term_ref()	PL_new_term_ref__LD(PASS_LD1)
 #define PL_new_term_refs(n)	PL_new_term_refs__LD(n PASS_LD)
 
@@ -336,30 +360,14 @@ PL_copy_term_ref__LD(term_t from ARG_LD)
   term_t r;
   FliFrame fr;
 
-  if ( !ensureLocalSpace(sizeof(word)) )
+  if ( !ensureLocalSpace(sizeof(word)) ||
+       !globalizeTermRef(from) )
     return 0;
 
-retry:
   t  = (Word)lTop;
   r  = consTermRef(t);
   p2 = valHandleP(from);
-  if ( isVar(*p2) )
-  { Word v;
-    word w;
-
-    if ( !hasGlobalSpace(1) )
-    { if ( !ensureGlobalSpace(1, ALLOW_GC) )
-	return 0;
-      goto retry;
-    }
-    v = gTop++;
-    setVar(*v);
-    w = makeRefG(v);
-    Trail(p2, w);
-    *t = w;
-  } else
-  { *t = linkVal(p2);
-  }
+  *t = linkVal(p2);
   lTop = (LocalFrame)(t+1);
   fr = fli_context;
   fr->size++;

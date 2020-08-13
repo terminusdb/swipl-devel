@@ -2423,7 +2423,7 @@ PL_open_query(Module ctx, int flags, Procedure proc, term_t args)
   QueryFrame qf;
   LocalFrame fr, top;
   Definition def;
-  size_t arity;
+  size_t i, arity;
   Word ap;
   size_t lneeded;
   static int top_initialized = FALSE;
@@ -2457,6 +2457,7 @@ PL_open_query(Module ctx, int flags, Procedure proc, term_t args)
 
 					/* resolve can call-back */
   def = getProcDefinedDefinition(proc->definition PASS_LD);
+  arity = def->functor->arity;
 
 #ifdef JMPBUF_ALIGNMENT
   lneeded = JMPBUF_ALIGNMENT + sizeof(struct queryFrame)+MAXARITY*sizeof(word);
@@ -2466,6 +2467,10 @@ PL_open_query(Module ctx, int flags, Procedure proc, term_t args)
 
   if ( !ensureLocalSpace(lneeded) )
     return (qid_t)0;
+  for(i=0; i<arity; i++)
+  { if ( !globalizeTermRef(args+i) )
+      return (qid_t)0;
+  }
 					/* should be struct alignment, */
 					/* but for now, I think this */
 					/* is always the same */
@@ -2499,7 +2504,6 @@ PL_open_query(Module ctx, int flags, Procedure proc, term_t args)
   setNextFrameFlags(fr, top);
   set(top, FR_HIDE_CHILDS);
   fr->programPointer = clause.codes;
-  arity		     = def->functor->arity;
 
   DEBUG(CHK_SECURE, checkStacks(NULL));
   assert((uintptr_t)fli_context > (uintptr_t)environment_frame);
