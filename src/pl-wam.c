@@ -815,6 +815,10 @@ typedef enum
 Unify a pointer into a new  global  term   (g)  with  a  pointer into an
 environment as obtained from some instruction VAR argument. This assumes
 we have allocated enough trail stack.
+
+See (*) with callBreakHook() for why we  need protect_var(). As the term
+reference is only used for  GC,  we   can  use  a  local stack reference
+(makeRefLok()).
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 static void
@@ -822,7 +826,7 @@ protect_var(Word v ARG_LD)
 { term_t t = PL_new_term_ref_noshift();
 
   if ( t )
-    *valTermRef(t) = makeRefL(v);
+    *valTermRef(t) = makeRefLok(v);
   else
     assert(0);		/* cannot happen due to MINFOREIGNSIZE */
 }
@@ -840,7 +844,7 @@ unify_gl(Word g, Word l, int has_firstvar ARG_LD)
     assert(tTop+1 < tMax);
     LTrail(l);
   } else if ( needsRef(*l) )
-  { *g = makeRef(l);
+  { *g = makeRefG(l);
   } else
   { *g = *l;
   }
@@ -1146,7 +1150,7 @@ callBreakHook() calls prolog:break_hook/6 as
 initialise these to bind to the  goal.   However,  if GC comes along, it
 will reset these variables.  Therefore,  we   fake  GC  that  we already
 executed this instruction. The price is   that  V (normal var) arguments
-are not marked as used, and GC migh   thus  clean them. We fix that with
+are not marked as used, and GC might   thus clean them. We fix that with
 protect_var(), which creates a  term-reference   to  the local variable,
 such that it is marked from the foreign environment.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
