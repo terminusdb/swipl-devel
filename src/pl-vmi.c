@@ -1045,9 +1045,22 @@ VMI(B_UNIFY_VAR, VIF_BREAK, 1, (CA1_VAR))
 unify_var_cont:
   if ( (slow_unify=LD->slow_unify) )
   { Word k = ARGP;
+    word w;
+
+    if ( isVar(*k) )
+    { Word v;
+
+      ENSURE_GLOBAL_SPACE(1, k = ARGP);
+      v = gTop++;
+      setVar(*v);
+      w = makeRefG(v);
+      Trail(k, w);
+    } else
+    { w	= linkVal(k);
+    }
 
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(k);
+    *ARGP++ = w;
     setVar(*ARGP);
     umode = uwrite;			/* must write for GC to work */
     NEXT_INSTRUCTION;
