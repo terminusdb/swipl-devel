@@ -4311,13 +4311,21 @@ We set FR_WATCHED to get a cleanup call if the frame fails or is cutted.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(I_CALLCLEANUP, 0, 0, ())
-{ if ( !mustBeCallable(consTermRef(argFrameP(FR, 3)) PASS_LD) )
+{ Word p;
+
+  if ( !mustBeCallable(consTermRef(argFrameP(FR, 3)) PASS_LD) )
     THROW_EXCEPTION;
 
   newChoice(CHP_CATCH, FR PASS_LD);
   set(FR, FR_CLEANUP);
+
+  p = argFrameP(FR, 1);
+  if ( isVar(*p) )
+  { PL_error(NULL, 0, NULL, ERR_INSTANTIATION);
+    THROW_EXCEPTION;
+  }
 				/* = B_VAR1 */
-  *argFrameP(lTop, 0) = linkVal(argFrameP(FR, 1));
+  *argFrameP(lTop, 0) = linkVal(p);
 
   VMI_GOTO(I_USERCALL0);
 }
