@@ -168,6 +168,12 @@ code into functions.
 	  onchange;					\
 	}
 
+#define globaliseVar(p)             \
+	do { Word v = gTop++;       \
+	     setVar(*v);            \
+	     Trail(p, makeRefG(v)); \
+	   } while(0)
+
 
 		 /*******************************
 		 *	    DEBUGGING		*
@@ -1135,18 +1141,13 @@ VMI(B_UNIFY_FV, VIF_BREAK, 2, (CA1_FVAR,CA1_VAR))
   Word v = varFrameP(FR, (int)*PC++);
 
   if ( isVar(*v) )
-  { Word gv = gTop++;
-    setVar(*gv);
-    Trail(v, makeRefG(gv));
-  }
+    globaliseVar(v);
 
   if ( LD->slow_unify )
-  { Word gv = gTop++;
-    setVar(*gv);
-    *f = makeRefG(gv);
+  { globaliseVar(f);
     ARGP = argFrameP(lTop, 0);
     *ARGP++ = *f;
-    *ARGP++ = linkVal(v);
+    *ARGP++ = *v;
     goto debug_equals2;
   }
 
@@ -1162,9 +1163,19 @@ VMI(B_UNIFY_VV, VIF_BREAK, 2, (CA1_VAR,CA1_VAR))
   Word v2 = varFrameP(FR, (int)*PC++);
 
   if ( LD->slow_unify )
-  { ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
-    *ARGP++ = linkVal(v2);
+  { if ( isVar(*v1) || isVar(*v2) )
+    { ENSURE_GLOBAL_SPACE(2, { v1 = varFrameP(FR, PC[-2]);
+			       v2 = varFrameP(FR, PC[-1]);
+			     });
+      if ( isVar(*v1) )
+	globaliseVar(v1);
+      if ( isVar(*v2) )
+	globaliseVar(v2);
+    }
+
+    ARGP = argFrameP(lTop, 0);
+    *ARGP++ = *v1;
+    *ARGP++ = *v2;
   debug_equals2:
     NFR = lTop;
     DEF = GD->procedures.equals2->definition;
