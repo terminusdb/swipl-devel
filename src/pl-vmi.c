@@ -2573,11 +2573,16 @@ VMI(I_VAR, VIF_BREAK, 1, (CA1_VAR))
   { fpred = FUNCTOR_var1;
   debug_pred1:
 
+    if ( isVar(*p) )
+    { ENSURE_GLOBAL_SPACE(1, p = varFrameP(FR, (int)PC[-1]));
+      globaliseVar(p);
+    }
+
     NFR = lTop;
     setNextFrameFlags(NFR, FR);
     DEF  = lookupDefinition(fpred, MODULE_system);
     ARGP = argFrameP(NFR, 0);
-    *ARGP++ = linkVal(p);
+    *ARGP++ = *p;
 
     goto normal_call;
   }
