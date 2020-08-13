@@ -1091,28 +1091,25 @@ Unify two variables.  F stands for a first-var; V for any other var
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(B_UNIFY_FF, VIF_BREAK, 2, (CA1_FVAR,CA1_FVAR))
-{ Word v1 = varFrameP(FR, (int)*PC++);
+{ ENSURE_GLOBAL_SPACE(2, (void)0);
+  Word v1 = varFrameP(FR, (int)*PC++);
   Word v2 = varFrameP(FR, (int)*PC++);
+  Word v  = gTop++;
+
+  setVar(*v);
+  *v1 = makeRefG(v);
 
   if ( LD->slow_unify )
-  { setVar(*v1);
-    setVar(*v2);
+  { v = gTop++;
+    setVar(*v);
+    *v2 = makeRefG(v);
+
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
-    *ARGP++ = linkVal(v2);
+    *ARGP++ = *v1;
+    *ARGP++ = *v2;
     goto debug_equals2;
   } else
-  { Word v;
-    word w;
-
-    ENSURE_GLOBAL_SPACE(1, { v1 = varFrameP(FR, PC[-2]);
-			     v2 = varFrameP(FR, PC[-1]);
-			   });
-    v = gTop++;
-    setVar(*v);
-    w = makeRefG(v);
-    *v1 = w;
-    *v2 = w;
+  { *v2 = *v1;
   }
 
   NEXT_INSTRUCTION;
