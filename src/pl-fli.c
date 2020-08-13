@@ -339,11 +339,27 @@ PL_copy_term_ref__LD(term_t from ARG_LD)
   if ( !ensureLocalSpace(sizeof(word)) )
     return 0;
 
+retry:
   t  = (Word)lTop;
   r  = consTermRef(t);
   p2 = valHandleP(from);
+  if ( isVar(*p2) )
+  { Word v;
+    word w;
 
-  *t = linkVal(p2);
+    if ( !hasGlobalSpace(1) )
+    { if ( !ensureGlobalSpace(1, ALLOW_GC) )
+	return 0;
+      goto retry;
+    }
+    v = gTop++;
+    setVar(*v);
+    w = makeRefG(v);
+    Trail(p2, w);
+    *t = w;
+  } else
+  { *t = linkVal(p2);
+  }
   lTop = (LocalFrame)(t+1);
   fr = fli_context;
   fr->size++;
