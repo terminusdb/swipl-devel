@@ -1130,13 +1130,22 @@ VMI(B_UNIFY_VF, VIF_BREAK, 2, (CA1_FVAR,CA1_VAR))
 
 
 VMI(B_UNIFY_FV, VIF_BREAK, 2, (CA1_FVAR,CA1_VAR))
-{ Word f = varFrameP(FR, (int)*PC++);
+{ ENSURE_GLOBAL_SPACE(2, (void)0);
+  Word f = varFrameP(FR, (int)*PC++);
   Word v = varFrameP(FR, (int)*PC++);
 
+  if ( isVar(*v) )
+  { Word gv = gTop++;
+    setVar(*gv);
+    Trail(v, makeRefG(gv));
+  }
+
   if ( LD->slow_unify )
-  { setVar(*f);
+  { Word gv = gTop++;
+    setVar(*gv);
+    *f = makeRefG(gv);
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(f);
+    *ARGP++ = *f;
     *ARGP++ = linkVal(v);
     goto debug_equals2;
   }
