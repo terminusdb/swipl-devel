@@ -4561,12 +4561,18 @@ read_term(term_t term, ReadData rd ARG_LD)
   result = term_av(-1, rd);
   p = valTermRef(result[0]);
   if ( varInfo(*p, rd) )		/* reading a single variable */
-  { if ( (rc2=ensureSpaceForTermRefs(1 PASS_LD)) != TRUE )
+  { Word v = allocGlobal(1);
+
+    if ( !v )
+      goto out;
+    setVar(*v);
+    if ( (rc2=ensureSpaceForTermRefs(1 PASS_LD)) != TRUE )
     { rc = raiseStackOverflow(rc2);
       goto out;
     }
     p = valTermRef(result[0]);		/* may be shifted */
-    readValHandle(result[0], p, rd PASS_LD);
+    readValHandle(result[0], v, rd PASS_LD);
+    *p = makeRefG(v);
   }
 
   if ( !(token = get_token(FALSE, rd)) )
