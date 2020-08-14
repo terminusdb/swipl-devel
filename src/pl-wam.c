@@ -1533,7 +1533,7 @@ m_qualify_argument(LocalFrame fr, int arg ARG_LD)
       LTrail(p);
       *p = makeRefG(&p2[2]);
     } else
-    { p2[2] = (needsRef(*p) ? makeRef(p) : *p);
+    { p2[2] = (needsRef(*p) ? makeRefG(p) : *p);
     }
     *k = consPtr(p2, STG_GLOBAL|TAG_COMPOUND);
   } else

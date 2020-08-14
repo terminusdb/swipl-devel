@@ -618,8 +618,9 @@ VMI(H_VAR, 0, 1, (CA1_VAR))
 H_FIRSTVAR: A variable  in  the  head,   which  is  not  anonymous,  but
 encountered for the first time. So we know  that the variable is still a
 variable. Copy or make a reference.  Trailing   is  not needed as we are
-writing in this frame. As ARGP is pointing   in the argument list, it is
-on the local stack.
+writing in this frame.  ARGP is walking the argument list, but is always
+in some compound term as H_FIRSTVAR is not generated for plain variables
+in the head.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 VMI(H_FIRSTVAR, 0, 1, (CA1_FVAR))
@@ -627,7 +628,7 @@ VMI(H_FIRSTVAR, 0, 1, (CA1_FVAR))
   { setVar(*ARGP);
     varFrame(FR, *PC++) = makeRefG(ARGP);
   } else
-  { varFrame(FR, *PC++) = (needsRef(*ARGP) ? makeRef(ARGP) : *ARGP);
+  { varFrame(FR, *PC++) = (needsRef(*ARGP) ? makeRefG(ARGP) : *ARGP);
   }
   ARGP++;
   NEXT_INSTRUCTION;
@@ -767,9 +768,9 @@ VMI(H_LIST_FF, 0, 2, (CA1_FVAR,CA1_FVAR))
 
     if ( isList(*p) )
     { p = argTermP(*p, 0);
-      varFrame(FR, *PC++) = (needsRef(*p) ? makeRef(p) : *p);
+      varFrame(FR, *PC++) = (needsRef(*p) ? makeRefG(p) : *p);
       p++;
-      varFrame(FR, *PC++) = (needsRef(*p) ? makeRef(p) : *p);
+      varFrame(FR, *PC++) = (needsRef(*p) ? makeRefG(p) : *p);
     } else if ( canBind(*p) )
     { word c;
       Word ap;
@@ -2948,7 +2949,7 @@ VMI(S_INCR_DYNAMIC, 0, 0, ())
 	    LTrail(fa);
 	    *fa = makeRefG(&ap[i]);
 	  } else
-	  { ap[i] = needsRef(*fa) ? makeRef(fa) : *fa;
+	  { ap[i] = needsRef(*fa) ? makeRefG(fa) : *fa;
 	  }
 	}
       }
@@ -5116,7 +5117,7 @@ VMI(I_USERCALLN, VIF_BREAK, 1, (CA1_INTEGER))
 	{ Word a1 = unRef(a[i]);
 
 	  if ( a1 >= a && a1 < a+arity )
-	    a[i+shift] = makeRef(a1+shift);
+	    a[i+shift] = makeRefG(a1+shift);
 	  else
 	    a[i+shift] = a[i];
 	} else
@@ -5128,7 +5129,7 @@ VMI(I_USERCALLN, VIF_BREAK, 1, (CA1_INTEGER))
 	{ Word a1 = unRef(a[i]);
 
 	  if ( a1 >= a && a1 < a+arity )
-	    a[i+shift] = makeRef(a1+shift);
+	    a[i+shift] = makeRefG(a1+shift);
 	  else
 	    a[i+shift] = a[i];
 	} else
