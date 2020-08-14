@@ -275,10 +275,10 @@ do_unify(Word t1, Word t2 ARG_LD)
 	    }
 	    v = gTop++;
 	    setVar(*v);
-	    Trail(t1, makeRef(v));
-	    Trail(t2, makeRef(v));
+	    Trail(t1, makeRefG(v));
+	    Trail(t2, makeRefG(v));
 	  } else
-	  { Trail(t2, makeRef(t1));
+	  { Trail(t2, makeRefG(t1));
 	  }
 	  continue;
 	}
@@ -289,7 +289,7 @@ do_unify(Word t1, Word t2 ARG_LD)
       }
   #ifdef O_ATTVAR
       if ( isAttVar(w2 ) )
-	w2 = makeRef(t2);
+	w2 = makeRefG(t2);
   #endif
       Trail(t1, w2);
       continue;
@@ -301,7 +301,7 @@ do_unify(Word t1, Word t2 ARG_LD)
       }
   #ifdef O_ATTVAR
       if ( isAttVar(w1) )
-	w1 = makeRef(t1);
+	w1 = makeRefG(t1);
   #endif
       Trail(t2, w1);
       continue;
@@ -2347,7 +2347,7 @@ unify_vp(Word vp, Word val ARG_LD)
     } else
       setVar(*vp);
   } else if ( isAttVar(*val) )
-  { *vp = makeRef(val);
+  { *vp = makeRefG(val);
   } else
     *vp = *val;
 }
