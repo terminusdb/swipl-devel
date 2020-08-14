@@ -3137,7 +3137,8 @@ readValHandle(term_t term, Word argp, ReadData _PL_rd ARG_LD)
     { var->variable = PL_new_term_ref_noshift();
       assert(var->variable);
       setVar(*argp);
-      *valTermRef(var->variable) = makeRef(argp);
+      DEBUG(0, assert(argp < (Word)lBase));
+      *valTermRef(var->variable) = makeRefG(argp);
     } else				/* reference to existing var */
     { *argp = *valTermRef(var->variable);
     }
@@ -3994,7 +3995,7 @@ term is to be written.
     tmp = term_av(-1, _PL_rd);
     readValHandle(tmp[0], argp++, _PL_rd PASS_LD);
     truncate_term_stack(tmp, _PL_rd);
-    setHandle(tail, makeRef(argp));
+    setHandle(tail, makeRefG(argp));
 
     token = get_token(FALSE, _PL_rd);
 
