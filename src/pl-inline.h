@@ -452,6 +452,23 @@ valFloat__LD(word w ARG_LD)
 }
 #endif
 
+static inline word
+linkValI__LD(Word p ARG_LD)
+{ word w = *p;
+
+  while(isRef(w))
+  { p = unRef(w);
+    w = *p;
+  }
+
+  DEBUG(CHK_ATOM_GARBAGE_COLLECTED, assert(w != ATOM_garbage_collected));
+
+  if ( !needsRef(w) )
+    return w;
+  else
+    return makeRefG(p);
+}
+
 static inline int
 is_signalled(ARG1_LD)
 { return HAS_LD && unlikely((LD->signal.pending[0]|LD->signal.pending[1]) != 0);

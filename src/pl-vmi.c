@@ -1010,7 +1010,7 @@ bvar_cont:
     globaliseVar(p);
     *ARGP++ = *p;
   } else
-  { *ARGP++ = linkVal(p);
+  { *ARGP++ = linkValI(p);
   }
   NEXT_INSTRUCTION;
 }
