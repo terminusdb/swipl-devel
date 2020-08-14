@@ -229,7 +229,6 @@ and while loading .wic files.  It comes at no price.
 #define deRef(p)	{ while(isRef(*(p))) (p) = unRef(*(p)); }
 #define deRef2(p, d)	{ (d) = (p); deRef(d); }
 #define makeRefG(p)	consPtr(p, TAG_REFERENCE|STG_GLOBAL)
-#define makeRef(p)	(assert((void*)(p) < (void*)lBase), makeRefG(p))
 #ifdef O_ATTVAR
 #define needsRef(w)	(tag(w) <= TAG_ATTVAR)
 #else

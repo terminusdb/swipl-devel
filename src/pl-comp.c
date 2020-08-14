@@ -2182,7 +2182,8 @@ link_local_var(Word v, int iv, CompileInfo ci ARG_LD)
 
   if ( k >= (Word) lMax )
     return LOCAL_OVERFLOW;
-  *k = makeRef(vd->address);
+  DEBUG(0, assert(vd->address < (Word)lBase));
+  *k = makeRefG(vd->address);
 
   return TRUE;
 }
@@ -2380,7 +2381,7 @@ isvar:
       return LOCAL_OVERFLOW;
 
     if ( isAttVar(*arg) )		/* attributed variable: must make */
-      *k = makeRef(arg);		/* a reference to avoid binding a */
+      *k = makeRefG(arg);		/* a reference to avoid binding a */
     else				/* copy! */
       *k = *arg;
     if ( ci->argvar < 3 )
@@ -4512,9 +4513,9 @@ unifyVar(Word var, term_t vars, size_t i ARG_LD)
   deRef(var);
   if ( isVar(*v) && isVar(*var) )
   { if ( v < var )
-    { Trail(var, makeRef(v));
+    { Trail(var, makeRefG(v));
     } else
-    { Trail(v, makeRef(var));
+    { Trail(v, makeRefG(var));
     }
   } else if ( isVar(*var) )		/* retract called with bounded var */
   { Trail(var, *v);
