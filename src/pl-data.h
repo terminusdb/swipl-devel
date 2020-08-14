@@ -225,14 +225,11 @@ and while loading .wic files.  It comes at no price.
 		 *******************************/
 
 #define isRef(w)	(tag(w) == TAG_REFERENCE)
-#define isRefL(w)	(tagex(w) == (TAG_REFERENCE|STG_LOCAL))
-#define unRef(w)	((Word)valPtr(w))
-#define unRefL(w)	((Word)valPtr2(w, STG_LOCAL))
+#define unRef(w)	((Word)valPtr2(w, STG_GLOBAL))
 #define deRef(p)	{ while(isRef(*(p))) (p) = unRef(*(p)); }
 #define deRef2(p, d)	{ (d) = (p); deRef(d); }
-#define makeRefL(p)	(assert(0),consPtr(p, TAG_REFERENCE|STG_LOCAL))
 #define makeRefG(p)	consPtr(p, TAG_REFERENCE|STG_GLOBAL)
-#define makeRef(p)	((void*)(p) >= (void*)lBase ? makeRefL(p) : makeRefG(p))
+#define makeRef(p)	(assert((void*)(p) < (void*)lBase), makeRefG(p))
 #ifdef O_ATTVAR
 #define needsRef(w)	(tag(w) <= TAG_ATTVAR)
 #else

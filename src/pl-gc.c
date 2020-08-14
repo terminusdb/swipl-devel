@@ -158,8 +158,16 @@ recordMark__LD(Word p ARG_LD)
 #define processLocal(p) (local_marked--)
 #endif
 
-#undef makeRefL				/* for GC we do allow local refs */
-#define makeRefL(p)	consPtr(p, TAG_REFERENCE|STG_LOCAL)
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Whereas in the rest of the system reference pointers always point at the
+global stack, GC needs to reverse pointers   and  thus be able to create
+reference pointers to the local stack as it used to be.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+#undef makeRef
+#undef unRef
+#define makeRef(p)	((void*)p >= (void*)lBase ? makeRefLok(p) : makeRefG(p))
+#define unRef(w)	((Word)valPtr(w))
 
 #define ldomark(p)	{ *(p) |= MARK_MASK; }
 #define domark(p)	{ if ( is_marked(p) ) \
