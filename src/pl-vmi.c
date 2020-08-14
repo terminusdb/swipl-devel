@@ -1144,7 +1144,7 @@ VMI(B_UNIFY_FV, VIF_BREAK, 2, (CA1_FVAR,CA1_VAR))
     goto debug_equals2;
   }
 
-  *f = linkVal(v);
+  *f = linkValI(v);
 
   NEXT_INSTRUCTION;
 }
@@ -1338,8 +1338,8 @@ VMI(B_NEQ_VV, VIF_BREAK, 2, (CA1_VAR,CA1_VAR))
     }
 
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
-    *ARGP++ = linkVal(v2);
+    *ARGP++ = linkValI(v1);
+    *ARGP++ = linkValI(v2);
   debug_neq_vv:
     NFR = lTop;
     DEF = GD->procedures.not_strict_equal2->definition;
@@ -1373,7 +1373,7 @@ VMI(B_NEQ_VC, VIF_BREAK, 2, (CA1_VAR,CA1_DATA))
     }
 
     ARGP = argFrameP(lTop, 0);
-    *ARGP++ = linkVal(v1);
+    *ARGP++ = linkValI(v1);
     *ARGP++ = c;
     goto debug_neq_vv;
   }
@@ -4326,7 +4326,7 @@ VMI(I_CALLCLEANUP, 0, 0, ())
     THROW_EXCEPTION;
   }
 				/* = B_VAR1 */
-  *argFrameP(lTop, 0) = linkVal(p);
+  *argFrameP(lTop, 0) = linkValI(p);
 
   VMI_GOTO(I_USERCALL0);
 }
@@ -4397,7 +4397,7 @@ VMI(I_CATCH, 0, 0, ())
     THROW_EXCEPTION;
   }
 				  /* = B_VAR0 */
-  *argFrameP(lTop, 0) = linkVal(p);
+  *argFrameP(lTop, 0) = linkValI(p);
   VMI_GOTO(I_USERCALL0);
 }
 
@@ -5157,7 +5157,7 @@ frame.
     ARGP = argFrameP(NFR, 0);
 					/* args is pointer into term: ok */
     for(; arity-- > 0; ARGP++, args++)
-      *ARGP = linkVal(args);
+      *ARGP = linkValI(args);
   }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -5228,7 +5228,7 @@ VMI(I_RESET, 0, 0, ())
   }
   set(FR, FR_INRESET);
 			  /* = B_VAR0 */
-  *argFrameP(lTop, 0) = linkVal(p);
+  *argFrameP(lTop, 0) = linkValI(p);
   VMI_GOTO(I_USERCALL0);
 }
 
@@ -5260,7 +5260,7 @@ VMI(I_CALLCONT, 0, 1, (CA1_VAR))
 
   deRef(cp);
   if ( hasFunctor(*cp, FUNCTOR_call1) )
-  { *ARGP++ = linkVal(argTermP(*cp, 0));
+  { *ARGP++ = linkValI(argTermP(*cp, 0));
     VMI_GOTO(I_USERCALL0);
   } else
   { term_t cont = pushWordAsTermRef(cp);
@@ -5666,7 +5666,7 @@ VMI(T_VAR, 0, 1, (CA1_INTEGER))
 
   if ( isVar(*vp) )
   { DEBUG(MSG_TRIE_VM, Sdprintf("First var %zd\n", offset));
-    Trail(vp, linkVal(TrieCurrentP));
+    Trail(vp, linkValI(TrieCurrentP));
   } else
   { int rc;
 
