@@ -168,7 +168,8 @@ be kept consistent.
 
 #define tag(w)		((w) & TAG_MASK)
 #define storage(w)	((w) & STG_MASK)
-#define valPtr2(w, s)	((Word)(((w) >> 5) + base_addresses[s]))
+#define valPtrB(w, b)	((Word)(((w) >> 5) + (b)))
+#define valPtr2(w, s)	valPtrB(w, LD->bases[s])
 #define valPtr(w)	valPtr2(w, storage(w))
 #define valInt(w)	((intptr_t)(w) >> LMASK_BITS)
 #define valUInt(w)	((uintptr_t)(w) >> LMASK_BITS)
