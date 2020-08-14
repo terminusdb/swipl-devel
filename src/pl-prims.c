@@ -2332,6 +2332,9 @@ PRED_IMPL("arg", 3, arg, PL_FA_NONDETERMINISTIC)
 /* unify_vp() assumes *vp is a variable and binds it to val.
    The assignment is *not* trailed. As no allocation takes
    place, there are no error conditions.
+
+   It is *not* allowed for *both* vp and val to be local stack
+   pointers.
 */
 
 void
@@ -2340,10 +2343,12 @@ unify_vp(Word vp, Word val ARG_LD)
 
   if ( isVar(*val) )
   { if ( val < vp )
-    { *vp = makeRef(val);
+    { DEBUG(0, assert(val < (Word)lBase));
+      *vp = makeRefG(val);
     } else if ( vp < val )
     { setVar(*vp);
-      *val = makeRef(vp);
+      DEBUG(0, assert(vp < (Word)lBase));
+      *val = makeRefG(vp);
     } else
       setVar(*vp);
   } else if ( isAttVar(*val) )
@@ -2592,7 +2597,7 @@ PRED_IMPL("=..", 2, univ, PL_FA_ISO)
       { Word h = HeadList(l);
 
 	deRef(h);
-	*p++ = needsRef(*h) ? makeRef(h) : *h;
+	*p++ = needsRef(*h) ? makeRefG(h) : *h;
 	l = TailList(l);
 	deRef(l);
       }
@@ -3044,7 +3049,7 @@ term_variables_loop(term_agenda *agenda, size_t maxcount, int flags ARG_LD)
 	    return count;
 	  if ( !(v = PL_new_term_ref_noshift()) )
 	    return TV_NOSPACE;
-	  *valTermRef(v) = makeRef(p);
+	  *valTermRef(v) = makeRefG(p);
 
 	  deRef2(p2, p);
 	  goto again;
@@ -3054,7 +3059,7 @@ term_variables_loop(term_agenda *agenda, size_t maxcount, int flags ARG_LD)
 	  return count;
 	if ( !(v = PL_new_term_ref_noshift()) )
 	  return TV_NOSPACE;
-	*valTermRef(v) = makeRef(p);
+	*valTermRef(v) = makeRefG(p);
       }
     } else if ( isTerm(w) )
     { Functor f = valueTerm(w);
@@ -3416,7 +3421,7 @@ free_variables_loop(Word t, atom_t *mname, term_t goal ARG_LD)
 	{ n = TV_NOSPACE;
 	  goto out;
 	}
-	*valTermRef(v) = makeRef(t);
+	*valTermRef(v) = makeRefG(t);
 
 	n++;
       }
@@ -3464,7 +3469,7 @@ free_variables_loop(Word t, atom_t *mname, term_t goal ARG_LD)
 
       continue;
     } else if ( !in_goal && !existential) /* non-term goal (atom or invalid) */
-    { *valTermRef(goal) = needsRef(*t) ? makeRef(t) : *t;
+    { *valTermRef(goal) = needsRef(*t) ? makeRefG(t) : *t;
       in_goal = TRUE;
     }
   }
@@ -3680,7 +3685,7 @@ retry:
 	gp[3] = FUNCTOR_equals2;
 	if ( isTrailVal(p) )
 	{ Word p2 = tt[-1].address;
-	  gp[4] = makeRef(p2);
+	  gp[4] = makeRefG(p2);
 	  gp[5] = *p2;
 	} else
 	{ gp[5] = *p;
