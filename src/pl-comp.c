@@ -465,7 +465,7 @@ push_compiler_warnings(CompileInfo ci ARG_LD)
       { int i;
 
 	for(i=0; i<cw->argc; i++)
-	  *valTermRef(cw->av+i) = linkVal(cw->argv[i]);
+	  *valTermRef(cw->av+i) = linkValI(cw->argv[i]);
       } else
       { free_compiler_warnings(ci);
 	return LOCAL_OVERFLOW;
