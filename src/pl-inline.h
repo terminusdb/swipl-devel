@@ -452,6 +452,13 @@ valFloat__LD(word w ARG_LD)
 }
 #endif
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+linkValI(p)  is  an  inlined  version  of  linkVal()  that  assumes  the
+dereferenced value of `p` lives on  the   global  stack. It has no error
+checking (unless compiled for debugging) and fetches the base address of
+the global stack only once.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 static inline word
 linkValI__LD(Word p ARG_LD)
 { word w = *p;
@@ -469,6 +476,7 @@ linkValI__LD(Word p ARG_LD)
   { return w;
   } else
   { // return makeRefG(p);
+    DEBUG(0, assert(p<(Word)lBase));
     return consPtrB(p, gb, TAG_REFERENCE|STG_GLOBAL);
   }
 }

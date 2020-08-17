@@ -412,7 +412,7 @@ PL_copy_term_ref__LD(term_t from ARG_LD)
   t  = (Word)lTop;
   r  = consTermRef(t);
   p2 = valHandleP(from);
-  *t = linkVal(p2);
+  *t = linkValI(p2);
   lTop = (LocalFrame)(t+1);
   fr = fli_context;
   fr->size++;
@@ -2015,7 +2015,7 @@ _PL_get_arg_sz(size_t index, term_t t, term_t a)
   Functor f = (Functor)valPtr(w);
   Word p = &f->arguments[index-1];
 
-  setHandle(a, linkVal(p));
+  setHandle(a, linkValI(p));
   return TRUE;
 }
 int
@@ -2035,7 +2035,7 @@ _PL_get_arg__LD(size_t index, term_t t, term_t a ARG_LD)
   Functor f = (Functor)valPtr(w);
   Word p = &f->arguments[index-1];
 
-  setHandle(a, linkVal(p));
+  setHandle(a, linkValI(p));
   return TRUE;
 }
 
@@ -2052,7 +2052,7 @@ PL_get_arg_sz(size_t index, term_t t, term_t a)
     if ( --index < arity )
     { Word p = &f->arguments[index];
 
-      setHandle(a, linkVal(p));
+      setHandle(a, linkValI(p));
       succeed;
     }
   }
@@ -2086,8 +2086,8 @@ PL_get_list__LD(term_t l, term_t h, term_t t ARG_LD)
   if ( isList(w) )
   { Word a = argTermP(w, 0);
 
-    setHandle(h, linkVal(a++));
-    setHandle(t, linkVal(a));
+    setHandle(h, linkValI(a++));	/* safe: `a` is on global stack */
+    setHandle(t, linkValI(a));
 
     succeed;
   }
@@ -2112,7 +2112,7 @@ PL_get_head(term_t l, term_t h)
 
   if ( isList(w) )
   { Word a = argTermP(w, 0);
-    setHandle(h, linkVal(a));
+    setHandle(h, linkValI(a));	/* safe: `a` is on global stack */
     succeed;
   }
 
@@ -2127,7 +2127,7 @@ PL_get_tail(term_t l, term_t t)
 
   if ( isList(w) )
   { Word a = argTermP(w, 1);
-    setHandle(t, linkVal(a));
+    setHandle(t, linkValI(a));	/* safe: `a` is on global stack */
     succeed;
   }
   fail;
@@ -2818,7 +2818,7 @@ int
 PL_put_term__LD(term_t t1, term_t t2 ARG_LD)
 { if ( globalizeTermRef(t2) )
   { Word p2 = valHandleP(t2);
-    setHandle(t1, linkVal(p2));
+    setHandle(t1, linkValI(p2));
     return TRUE;
   }
 
@@ -3425,8 +3425,8 @@ PL_unify_list__LD(term_t l, term_t h, term_t t ARG_LD)
   } else if ( isList(*p) )
   { Word a = argTermP(*p, 0);
 
-    setHandle(h, linkVal(a++));
-    setHandle(t, linkVal(a));
+    setHandle(h, linkValI(a++));	/* safe: `a` is on global stack */
+    setHandle(t, linkValI(a));
   } else
     fail;
 
@@ -3939,6 +3939,12 @@ PL_put_dict(term_t t, atom_t tag,
 { GET_LD
   Word p, p0;
   size_t size = len*2+2;
+  size_t i;
+
+  for(i=0; i<len; i++)
+  { if ( !globalizeTermRef(values+i) )
+      return FALSE;
+  }
 
   if ( (p0=p=allocGlobal(size)) )
   { *p++ = dict_functor(len);
@@ -3955,7 +3961,7 @@ PL_put_dict(term_t t, atom_t tag,
     }
 
     for(; len-- > 0; keys++, values++)
-    { *p++ = linkVal(valTermRef(values));
+    { *p++ = linkValI(valTermRef(values));
       if ( is_dict_key(*keys) )
 	*p++ = *keys;
       else
@@ -4074,13 +4080,19 @@ PL_strip_module__LD(term_t raw, module_t *m, term_t plain, int flags ARG_LD)
   if ( hasFunctor(*p, FUNCTOR_colon2) )
   { if ( !(p = stripModule(p, m, flags PASS_LD)) )
       return FALSE;
-    setHandle(plain, linkVal(p));
+    setHandle(plain, linkValI(p));
   } else
   { if ( *m == NULL )
       *m = environment_frame ? contextModule(environment_frame)
 			     : MODULE_user;
     if ( raw != plain )
-      setHandle(plain, linkVal(p));
+    { word w = linkValG(p);
+
+      if ( w )
+	setHandle(plain, w);
+      else
+	return FALSE;
+    }
   }
 
   return TRUE;
@@ -4115,12 +4127,17 @@ PL_strip_module_ex__LD(term_t raw, module_t *m, term_t plain ARG_LD)
       setHandle(plain, needsRef(*a1) ? makeRefG(a1) : *a1);
       return PL_type_error("module", plain);
     }
-    setHandle(plain, linkVal(p));
+    setHandle(plain, linkValI(p));
   } else
-  { if ( *m == NULL )
+  { word w;
+
+    if ( *m == NULL )
       *m = environment_frame ? contextModule(environment_frame)
 			     : MODULE_user;
-    setHandle(plain, needsRef(*p) ? makeRefG(p) : *p);
+    if ( (w=linkValG(p)) )
+      setHandle(plain, w);
+    else
+      return FALSE;
   }
 
   return TRUE;
