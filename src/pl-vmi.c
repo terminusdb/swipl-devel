@@ -2055,9 +2055,10 @@ VMI(I_YIELD, VIF_BREAK, 0, ())
   p = argFrameP(FR, 0);
   if ( isVar(*p) )
   { ENSURE_GLOBAL_SPACE(1, p = argFrameP(FR, 0));
+    QF = QueryFromQid(qid);
     globaliseVar(p);
   }
-  *valTermRef(QF->yield.term) = linkVal(p);
+  *valTermRef(QF->yield.term) = linkValI(p);
   DEBUG(CHK_SECURE, checkStacks(NULL));
 
   assert(LD->exception.throw_environment == &throw_env);

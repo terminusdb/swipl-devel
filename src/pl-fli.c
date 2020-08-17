@@ -110,8 +110,24 @@ as we could also have returned the last reference.
 
 Second, we can opt  for  inlining  or   not.  Especially  in  the latter
 variation, which is a bit longer, a function might actually be faster.
+
+The general version here is no longer used  as we typically need to deal
+with linking to a local stack variable  in a dedicated way. Therefore we
+have:
+
+  - linkValI()
+    Is an inlined version where the caller must guarantee we should
+    not make a reference to a local variable.
+  - linkValG()
+    May allocate a global stack variable and GC/SHIFT.  Caller must
+    guarantee this poses no problems.
+  - linkValNoG()
+    May be used if in the case the argument is a local stack variable
+    we can simply pass it as an unlinked variable.  Typically the case
+    if a variable is an error anyway.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+#if 0
 word
 linkVal__LD(Word p ARG_LD)
 { word w = *p;
@@ -144,6 +160,7 @@ linkVal__LD(Word p ARG_LD)
 
   return w;
 }
+#endif
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
