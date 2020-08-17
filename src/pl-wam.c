@@ -674,7 +674,7 @@ call_term(Module mdef, term_t goal ARG_LD)
 	ap = valTermRef(av);
 
 	for(i=0; i<arity; i++, ap++)
-	  *ap = linkVal(&args[i]);
+	  *ap = linkValG(&args[i]);
 	functor = f->definition;
       } else
 	return call1(mdef, goal PASS_LD);
@@ -2515,7 +2515,7 @@ PL_open_query(Module ctx, int flags, Procedure proc, term_t args)
     Word p = valTermRef(args);
 
     for( n = arity; n-- > 0; p++ )
-      *ap++ = linkVal(p);
+      *ap++ = linkValI(p);
   }
 					/* lTop above the arguments */
   lTop = (LocalFrame)ap;
