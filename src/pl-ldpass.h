@@ -54,6 +54,7 @@
 #define globalizeTermRef(t)	globalize_term_ref__LD(t PASS_LD)
 #define linkVal(p)		linkVal__LD(p PASS_LD)
 #define linkValG(p)		linkValG__LD(p PASS_LD)
+#define linkValNoG(p)		linkValNoG__LD(p PASS_LD)
 #define linkValI(p)		linkValI__LD(p PASS_LD)
 #define TrailAssignment(p)	TrailAssignment__LD(p PASS_LD)
 #define bindConst(p, c)		bindConst__LD(p, c PASS_LD)

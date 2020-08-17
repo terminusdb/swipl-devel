@@ -146,6 +146,13 @@ linkVal__LD(Word p ARG_LD)
 }
 
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If `p` ultimately is a  variable  on   the  local  stack  this creates a
+variable on the global stack and links  both variables to this location.
+Note that this may cause global and   trail stack overflows and thus may
+cause a stack shift, garbage collection or fail (returning 0).
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 word
 linkValG__LD(Word p ARG_LD)
 { word w;
@@ -188,6 +195,30 @@ retry:
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+This version always succeeds, but returns   a non-linked variable if the
+argument is a plain variable on the local   stack.  This is fine for use
+cases where a variable is an error.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+word
+linkValNoG__LD(Word p ARG_LD)
+{ word w = *p;
+
+  while(isRef(w))
+  { p = unRef(w);
+    w = *p;
+  }
+
+  if ( needsRef(w) )
+  { if ( p < (Word)lBase )
+      w = makeRefG(p);
+  }
+
+  return w;
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 term_t pushWordAsTermRef(Word p)
        popTermRef()
 
@@ -200,6 +231,10 @@ PushPtr()/PopPtr() (see pl-incl.h).  Push and pop *must* match.
 Note that this protects creating a term-ref  if there is no environment.
 However, the function called still must   either not use term-references
 or must create an environment.
+
+Note  that  if  `p`  ultimately  is  a   variable  on  the  local  stack
+linkValNoG() will return a non-linked variable. This should be ok as for
+all use cases passing a variable is an error.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 term_t
@@ -208,7 +243,7 @@ pushWordAsTermRef__LD(Word p ARG_LD)
   term_t t = LD->tmp.h[i];
 
   assert(i<TMP_PTR_SIZE);
-  setHandle(t, linkVal(p));
+  setHandle(t, linkValNoG(p));
 
   return t;
 }
