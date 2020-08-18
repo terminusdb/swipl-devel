@@ -1377,6 +1377,7 @@ typedef struct gc_stats
 #define CA1_JUMP       16	/* Instructions to skip */
 #define CA1_AFUNC      17	/* Number of arithmetic function */
 #define CA1_TRIE_NODE  18	/* Tabling: answer trie node with delays */
+#define CA1_END	       19	/* Highest+1 */
 
 #define VIF_BREAK      0x01	/* Can be a breakpoint */
 
