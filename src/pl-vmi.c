@@ -2113,14 +2113,23 @@ VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
 VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
 
-  setNextFrameFlags(FR, FR);
-  DEF = proc->definition;
+  if ( true(FR, FR_WATCHED) )
+  { assert(0);				/* TBD */
+  }
 
-  goto depart_continue;			/* TBD: Handle undefined preds */
+  FR->clause = NULL;
+  leaveDefinition(DEF);
+
+  DEF = proc->definition;		/* TBD: Transparent */
+  setFramePredicate(FR, DEF);		/* TBD: Undefined predicates */
+  VMI_GOTO(I_TCALL);
 }
 
 VMI(I_TCALL, 0, 0, ())
 { setNextFrameFlags(FR, FR);
+  FR->clause = NULL;
+  if ( true(DEF, HIDE_CHILDS) )
+    set(FR, FR_HIDE_CHILDS);
 
   goto depart_continue;
 }
