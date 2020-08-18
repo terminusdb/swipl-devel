@@ -2077,6 +2077,53 @@ VMI(I_YIELD, VIF_BREAK, 0, ())
   }
 }
 
+		 /*******************************
+		 *	      LCO CALLS		*
+		 *******************************/
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Last call optimization instructions. Such a block is defined as follows:
+
+    L_NOLCO Ln
+    L_VAR t,f
+    ...
+    I_TCALL (or I_LCALL proc)
+Ln: <normal sequence>
+    I_DEPART proc
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+VMI(L_NOLCO, 0, 1, (CA1_JUMP))
+{ size_t jmp = *PC++;
+
+  if ( (void *)BFR <= (void *)FR && truePrologFlag(PLFLAG_LASTCALL) )
+    NEXT_INSTRUCTION;
+
+  PC += jmp;
+  NEXT_INSTRUCTION;
+}
+
+VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
+{ Word v1 = varFrameP(FR, (int)*PC++);
+  Word v2 = varFrameP(FR, (int)*PC++);
+
+  *v1 = *v2;
+  NEXT_INSTRUCTION;
+}
+
+VMI(I_LCALL, 0, 1, (CA1_PROC))
+{ Procedure proc = (Procedure)*PC++;
+
+  setNextFrameFlags(FR, FR);
+  DEF = proc->definition;
+
+  goto depart_continue;			/* TBD: Handle undefined preds */
+}
+
+VMI(I_TCALL, 0, 0, ())
+{ setNextFrameFlags(FR, FR);
+
+  goto depart_continue;
+}
 
 		 /*******************************
 		 *	      CONTROL		*
