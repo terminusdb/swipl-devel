@@ -5335,6 +5335,10 @@ decompileBody(decompileInfo *di, code end, Code until ARG_LD)
       case C_JMP:
 			    PC++;
 			    continue;
+      case L_NOLCO:
+			    PC += *PC;
+			    PC++;
+			    continue;
       case C_VAR_N:
 			    PC += 2;
 			    continue;
