@@ -2106,7 +2106,7 @@ VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
 { Word v1 = varFrameP(FR, (int)*PC++);
   Word v2 = varFrameP(FR, (int)*PC++);
 
-  *v1 = *v2;
+  *v1 = linkValI(v2);
   NEXT_INSTRUCTION;
 }
 
