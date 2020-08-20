@@ -2113,10 +2113,6 @@ VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
 VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
 
-  if ( !proc->definition->impl.any.defined &&	/* see (*) */
-       false(proc->definition, PROC_DEFINED) )
-    Sdprintf("Undefined: %s\n", predicateName(proc->definition));
-
   if ( true(FR, FR_WATCHED) )
   { LD->query->next_environment = lTop;
     lTop = (LocalFrame)argFrameP(FR, proc->definition->functor->arity);
@@ -2128,10 +2124,20 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
     if ( exception_term )
       THROW_EXCEPTION;
   }
-
   FR->clause = NULL;
   leaveDefinition(DEF);
+
   DEF = proc->definition;
+  if ( !DEF->impl.any.defined && false(DEF, PROC_DEFINED) )
+  { LD->query->next_environment = lTop;
+    lTop = (LocalFrame)argFrameP(FR, proc->definition->functor->arity);
+    SAVE_REGISTERS(qid);
+    DEF = getProcDefinedDefinition(DEF PASS_LD);
+    LOAD_REGISTERS(qid);
+    lTop = LD->query->next_environment;
+    LD->query->next_environment = NULL;
+  }
+
   if ( true(DEF, P_TRANSPARENT) )
   { FR->context = contextModule(FR);
     FR->level++;
