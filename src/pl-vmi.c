@@ -2113,16 +2113,38 @@ VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
 VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
 
+  if ( !proc->definition->impl.any.defined &&	/* see (*) */
+       false(proc->definition, PROC_DEFINED) )
+    Sdprintf("Undefined: %s\n", predicateName(proc->definition));
+
   if ( true(FR, FR_WATCHED) )
-  { assert(0);				/* TBD */
+  { LD->query->next_environment = lTop;
+    lTop = (LocalFrame)argFrameP(FR, proc->definition->functor->arity);
+    SAVE_REGISTERS(qid);
+    frameFinished(FR, FINISH_EXIT PASS_LD);
+    LOAD_REGISTERS(qid);
+    lTop = LD->query->next_environment;
+    LD->query->next_environment = NULL;
+    if ( exception_term )
+      THROW_EXCEPTION;
   }
 
   FR->clause = NULL;
   leaveDefinition(DEF);
+  DEF = proc->definition;
+  if ( true(DEF, P_TRANSPARENT) )
+  { FR->context = contextModule(FR);
+    FR->level++;
+    clear(FR, FR_CLEAR_NEXT);
+    set(FR, FR_CONTEXT);
+  } else
+  { setNextFrameFlags(FR, FR);
+  }
+  if ( true(DEF, HIDE_CHILDS) )
+    set(FR, FR_HIDE_CHILDS);
 
-  DEF = proc->definition;		/* TBD: Transparent */
-  setFramePredicate(FR, DEF);		/* TBD: Undefined predicates */
-  VMI_GOTO(I_TCALL);
+  setFramePredicate(FR, DEF);
+  goto depart_continue;
 }
 
 VMI(I_TCALL, 0, 0, ())
