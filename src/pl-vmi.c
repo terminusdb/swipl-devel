@@ -2127,6 +2127,35 @@ VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
   NEXT_INSTRUCTION;
 }
 
+VMI(L_VOID, 0, 1, (CA1_FVAR))
+{ Word v1 = varFrameP(FR, (int)*PC++);
+
+  setVar(*v1);
+  NEXT_INSTRUCTION;
+}
+
+VMI(L_ATOM, 0, 2, (CA1_FVAR,CA1_DATA))
+{ Word v1 = varFrameP(FR, (int)*PC++);
+  word  c = (word)*PC++;
+  pushVolatileAtom(c);
+  *v1 = c;
+  NEXT_INSTRUCTION;
+}
+
+VMI(L_NIL, 0, 1, (CA1_FVAR))
+{ Word v1 = varFrameP(FR, (int)*PC++);
+
+  *v1 = ATOM_nil;
+  NEXT_INSTRUCTION;
+}
+
+VMI(L_SMALLINT, 0, 2, (CA1_FVAR,CA1_DATA))
+{ Word v1 = varFrameP(FR, (int)*PC++);
+  word  c = (word)*PC++;
+  *v1 = c;
+  NEXT_INSTRUCTION;
+}
+
 VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
 
