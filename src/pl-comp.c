@@ -353,6 +353,7 @@ typedef struct target_module
 typedef struct
 { Module	module;			/* module to compile into */
   Clause	clause;			/* clause we are constructing */
+  Procedure	procedure;		/* Procedure it belongs to */
   int		arity;			/* arity of top-goal */
   int		vartablesize;		/* size of the vartable */
   int		islocal;		/* Temporary local clause */
@@ -1614,6 +1615,7 @@ compileClause(Clause *cp, Word head, Word body,
   { ci.islocal      = FALSE;
     ci.subclausearg = 0;
     ci.arity        = (int)def->functor->arity;
+    ci.procedure    = proc;
     ci.argvars      = 0;
   } else
   { Word g = varFrameP(lTop, VAROFFSET(1));
@@ -1623,6 +1625,7 @@ compileClause(Clause *cp, Word head, Word body,
     ci.argvars	    = 1;
     ci.argvar       = 1;
     ci.arity        = 0;
+    ci.procedure    = NULL;		/* no LCO */
     clause.flags    = GOAL_CLAUSE;
     *g		    = *body;
   }
@@ -2565,6 +2568,8 @@ predicates is still subject to  meta-calling   if  the  colon-context is
 unbound (e.g. Var:is_list(X)).
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+static void lco(CompileInfo ci, size_t pc0);
+
 static int
 compileSubClause(Word arg, code call, compileInfo *ci)
 { GET_LD
@@ -2572,6 +2577,7 @@ compileSubClause(Word arg, code call, compileInfo *ci)
   FunctorDef fdef;
   Procedure proc;
   Module tm;				/* lookup module */
+  size_t pc0;
 
   deRef(arg);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2707,6 +2713,7 @@ Calling  a  normal  predicate:  push  the  arguments  and  generate  the
 appropriate calling instruction.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+  pc0 = PC(ci);
   if ( fdef )				/* term: there are arguments */
   { size_t ar = fdef->arity;
 
@@ -2752,9 +2759,12 @@ appropriate calling instruction.
   } else
 #endif
   { if ( tm == ci->module )
-      Output_1(ci, call, (code) proc);
-    else
-      Output_2(ci, mcall(call), (code)tm, (code)proc);
+    { Output_1(ci, call, (code) proc);
+      if ( call == I_DEPART && ci->procedure )
+	lco(ci, pc0);
+    } else
+    { Output_2(ci, mcall(call), (code)tm, (code)proc);
+    }
   }
 
   return TRUE;
@@ -2814,6 +2824,110 @@ compileSimpleAddition(Word sc, compileInfo *ci ARG_LD)
   }
 
   fail;
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Perform LCO optimization when possible.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+static void
+reverse_code(Code a, Code z)
+{ z--;
+
+  while(a<z)
+  { code t = *a;
+    *a++ = *z;
+    *z-- = t;
+  }
+}
+
+
+static void
+lco(CompileInfo ci, size_t pc0)
+{ size_t pcz = PC(ci);
+  Code base  = baseBuffer(&(ci)->codes, code);
+  Code s     = base+pc0;
+  Code e     = base+pcz;
+  int oarg   = 0;
+  Code z;
+
+#define FIX_BUFFER_SHIFT() \
+	do \
+	{ intptr_t shift; \
+	  if ( (shift=(baseBuffer(&(ci)->codes, code)-base)) ) \
+	  { s    += shift; \
+	    e    += shift; \
+	    base += shift; \
+	  } \
+	} while(0)
+
+  assert(decode(e[-2]) == I_DEPART);
+  Output_1(ci, L_NOLCO, (code)0);
+  FIX_BUFFER_SHIFT();
+
+  for(; s < e-2; oarg++ )
+  { code c = decode(*s++);
+    const code_info *vmi = &codeTable[c];
+    int bv;
+
+    if ( false(vmi, VIF_LCO) )
+    { no_lco:
+      seekBuffer(&(ci)->codes, pcz, code);
+      return;
+    }
+
+    switch(c)
+    { case B_VAR0: bv = 0; goto common_bv;
+      case B_VAR1: bv = 1; goto common_bv;
+      case B_VAR2: bv = 2; goto common_bv;
+      case B_VAR:
+      { bv = (int)*s++;
+      common_bv:
+	if ( bv < oarg )		/* would overwrite */
+	  goto no_lco;
+	if ( bv != oarg )
+	{ Output_2(ci, L_VAR, (code)oarg, (code)bv);
+	}
+	break;
+      }
+      case B_VOID:
+	Output_1(ci, L_VOID, (code)oarg);
+        break;
+      case B_SMALLINT:
+      { code a = *s++;
+	Output_2(ci, L_VOID, (code)oarg, a);
+	break;
+      }
+      case B_ATOM:
+      { code a = *s++;
+	PL_register_atom(a);		/* TBD: unregister on failure */
+	Output_2(ci, L_VOID, (code)oarg, a);
+	break;
+      }
+      case B_NIL:
+	Output_1(ci, L_NIL, (code)oarg);
+        break;
+      default:
+	assert(0);
+    }
+
+    FIX_BUFFER_SHIFT();
+  }
+
+  if ( ci->procedure ==	(Procedure)e[-1] )
+    Output_0(ci, I_TCALL);
+  else
+    Output_1(ci, I_LCALL, e[-1]);
+
+  FIX_BUFFER_SHIFT();
+
+  e[1] = (code)(e-s-pcz-2);		/* fill L_NOLCO argument */
+
+  z = topBuffer(&(ci)->codes, code);
+  reverse_code(s, s+pcz);
+  reverse_code(s+pcz, z);
+  reverse_code(s, z);
 }
 
 

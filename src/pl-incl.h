@@ -1380,6 +1380,7 @@ typedef struct gc_stats
 #define CA1_END	       19	/* Highest+1 */
 
 #define VIF_BREAK      0x01	/* Can be a breakpoint */
+#define VIF_LCO        0x02	/* We have LCO support for this */
 
 typedef enum
 { VMI_REPLACE,

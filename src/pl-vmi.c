@@ -813,19 +813,19 @@ frame and therefore can just fill the argument. Trailing is not needed as
 this is above the stack anyway.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-VMI(B_ATOM, 0, 1, (CA1_DATA))
+VMI(B_ATOM, VIF_LCO, 1, (CA1_DATA))
 { word c = (word)*PC++;
   pushVolatileAtom(c);
   *ARGP++ = c;
   NEXT_INSTRUCTION;
 }
 
-VMI(B_SMALLINT, 0, 1, (CA1_DATA))
+VMI(B_SMALLINT, VIF_LCO, 1, (CA1_DATA))
 { *ARGP++ = (word)*PC++;
   NEXT_INSTRUCTION;
 }
 
-VMI(B_NIL, 0, 0, ())
+VMI(B_NIL, VIF_LCO, 0, ())
 { *ARGP++ = ATOM_nil;
   NEXT_INSTRUCTION;
 }
@@ -984,22 +984,22 @@ not needed as we are writing above the stack.
 
 BEGIN_SHAREDVARS
 int voffset;
-VMI(B_VAR0, 0, 0, ())
+VMI(B_VAR0, VIF_LCO, 0, ())
 { voffset = VAROFFSET(0);
   goto bvar_cont;
 }
 
-VMI(B_VAR1, 0, 0, ())
+VMI(B_VAR1, VIF_LCO, 0, ())
 { voffset = VAROFFSET(1);
   goto bvar_cont;
 }
 
-VMI(B_VAR2, 0, 0, ())
+VMI(B_VAR2, VIF_LCO, 0, ())
 { voffset = VAROFFSET(2);
   goto bvar_cont;
 }
 
-VMI(B_VAR, 0, 1, (CA1_VAR))
+VMI(B_VAR, VIF_LCO, 1, (CA1_VAR))
 { Word p;
   voffset = (int)*PC++;
 
@@ -1431,7 +1431,7 @@ B_VOID: A singleton variable in  the  body.   Ensure  the  argument is a
 variable.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-VMI(B_VOID, 0, 0, ())
+VMI(B_VOID, VIF_LCO, 0, ())
 { setVar(*ARGP++);
   NEXT_INSTRUCTION;
 }
