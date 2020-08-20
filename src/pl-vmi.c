@@ -2102,11 +2102,28 @@ VMI(L_NOLCO, 0, 1, (CA1_JUMP))
   NEXT_INSTRUCTION;
 }
 
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+L_VAR(to,from)  moves  a  variable  in  the  current  frame.  Note  that
+variables either have a value, are 0 (B_VOID)  or are a reference to the
+global stack. We want to dereference to keep the reference chains short,
+but we must not create a reference to   the B_VOID 0-variable. This is a
+simplified version of linkVal().
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 VMI(L_VAR, 0, 2, (CA1_FVAR,CA1_VAR))
 { Word v1 = varFrameP(FR, (int)*PC++);
   Word v2 = varFrameP(FR, (int)*PC++);
+  word w = *v2;
 
-  *v1 = linkValI(v2);
+  while(isRef(w))
+  { v2 = unRef(w);
+    if ( needsRef(*v2) )
+      break;
+    w = *v2;
+  }
+
+  *v1 = w;
   NEXT_INSTRUCTION;
 }
 
