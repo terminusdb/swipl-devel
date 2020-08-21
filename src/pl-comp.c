@@ -2903,13 +2903,13 @@ lco(CompileInfo ci, size_t pc0)
         break;
       case B_SMALLINT:
       { code a = *s++;
-	Output_2(ci, L_VOID, VAROFFSET(oarg), a);
+	Output_2(ci, L_SMALLINT, VAROFFSET(oarg), a);
 	break;
       }
       case B_ATOM:
       { code a = *s++;
 	PL_register_atom(a);		/* TBD: unregister on failure */
-	Output_2(ci, L_VOID, VAROFFSET(oarg), a);
+	Output_2(ci, L_ATOM, VAROFFSET(oarg), a);
 	break;
       }
       case B_NIL:
