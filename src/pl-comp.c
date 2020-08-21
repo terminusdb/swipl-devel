@@ -2761,9 +2761,7 @@ appropriate calling instruction.
   { if ( tm == ci->module )
     { Output_1(ci, call, (code) proc);
       if ( call == I_DEPART &&
-	   ci->procedure &&
-	   truePrologFlag(PLFLAG_OPTIMISE) &&
-	   !GD->bootsession )
+	   ci->procedure )
 	lco(ci, pc0);
     } else
     { Output_2(ci, mcall(call), (code)tm, (code)proc);
@@ -2855,8 +2853,6 @@ lco(CompileInfo ci, size_t pc0)
   Code e     = base+pcz;
   int oarg   = 0;
   Code z;
-
-  assert(e == topBuffer(&(ci)->codes, code));
 
 #define FIX_BUFFER_SHIFT() \
 	do \
