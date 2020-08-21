@@ -1806,7 +1806,7 @@ Finish up the clause.
     setContextModule(fr, module);
 
     DEBUG(MSG_COMP_ARGVAR, Sdprintf("; now %d vars\n", clause.variables));
-    DEBUG(MSG_COMP_ARGVAR, vm_list(cl->codes));
+    DEBUG(MSG_COMP_ARGVAR, vm_list(cl->codes, NULL));
     lTop = (LocalFrame)p;
   }
 
@@ -2760,7 +2760,10 @@ appropriate calling instruction.
 #endif
   { if ( tm == ci->module )
     { Output_1(ci, call, (code) proc);
-      if ( call == I_DEPART && ci->procedure )
+      if ( call == I_DEPART &&
+	   ci->procedure &&
+	   truePrologFlag(PLFLAG_OPTIMISE) &&
+	   !GD->bootsession )
 	lco(ci, pc0);
     } else
     { Output_2(ci, mcall(call), (code)tm, (code)proc);
@@ -2847,16 +2850,20 @@ static void
 lco(CompileInfo ci, size_t pc0)
 { size_t pcz = PC(ci);
   Code base  = baseBuffer(&(ci)->codes, code);
-  Code s     = base+pc0;
+  Code s0    = base+pc0;
+  Code s     = s0;
   Code e     = base+pcz;
   int oarg   = 0;
   Code z;
+
+  assert(e == topBuffer(&(ci)->codes, code));
 
 #define FIX_BUFFER_SHIFT() \
 	do \
 	{ intptr_t shift; \
 	  if ( (shift=(baseBuffer(&(ci)->codes, code)-base)) ) \
 	  { s    += shift; \
+	    s0   += shift; \
 	    e    += shift; \
 	    base += shift; \
 	  } \
@@ -2882,31 +2889,31 @@ lco(CompileInfo ci, size_t pc0)
       case B_VAR1: bv = 1; goto common_bv;
       case B_VAR2: bv = 2; goto common_bv;
       case B_VAR:
-      { bv = (int)*s++;
+      { bv = VARNUM(*s++);
       common_bv:
 	if ( bv < oarg )		/* would overwrite */
 	  goto no_lco;
 	if ( bv != oarg )
-	{ Output_2(ci, L_VAR, (code)oarg, (code)bv);
+	{ Output_2(ci, L_VAR, VAROFFSET(oarg), VAROFFSET(bv));
 	}
 	break;
       }
       case B_VOID:
-	Output_1(ci, L_VOID, (code)oarg);
+	Output_1(ci, L_VOID, VAROFFSET(oarg));
         break;
       case B_SMALLINT:
       { code a = *s++;
-	Output_2(ci, L_VOID, (code)oarg, a);
+	Output_2(ci, L_VOID, VAROFFSET(oarg), a);
 	break;
       }
       case B_ATOM:
       { code a = *s++;
 	PL_register_atom(a);		/* TBD: unregister on failure */
-	Output_2(ci, L_VOID, (code)oarg, a);
+	Output_2(ci, L_VOID, VAROFFSET(oarg), a);
 	break;
       }
       case B_NIL:
-	Output_1(ci, L_NIL, (code)oarg);
+	Output_1(ci, L_NIL, VAROFFSET(oarg));
         break;
       default:
 	assert(0);
@@ -2922,12 +2929,12 @@ lco(CompileInfo ci, size_t pc0)
 
   FIX_BUFFER_SHIFT();
 
-  e[1] = (code)(e-s-pcz-2);		/* fill L_NOLCO argument */
-
   z = topBuffer(&(ci)->codes, code);
-  reverse_code(s, s+pcz);
-  reverse_code(s+pcz, z);
-  reverse_code(s, z);
+  e[1] = (code)(z-e-2);			/* fill L_NOLCO argument */
+
+  reverse_code(s0, e);
+  reverse_code(e,  z);
+  reverse_code(s0, z);
 }
 
 
@@ -6253,10 +6260,10 @@ PRED_IMPL("$xr_member", 2, xr_member, PL_FA_NONDETERMINISTIC)
 		 *******************************/
 
 void
-vm_list(Code start)
+vm_list(Code start, Code end)
 { Code PC;
 
-  for(PC=start; ; PC=stepPC(PC))
+  for(PC=start; !end || PC < end; PC=stepPC(PC))
   { code op = fetchop(PC);
     const code_info *ci = &codeTable[op];
 
@@ -6273,8 +6280,6 @@ vm_list(Code start)
 		 /*******************************
 		 *	 CLAUSE <-> PROLOG	*
 		 *******************************/
-
-#define VARNUM(i) ((int)((i) - (ARGOFFSET / (int) sizeof(word))))
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Translate between a clause  and  a   Prolog  description  of the virtual

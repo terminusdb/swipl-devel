@@ -974,6 +974,7 @@ Macros for environment frames (local stack frames)
 
 #define ARGOFFSET		((int)sizeof(struct localFrame))
 #define VAROFFSET(var)		((var)+(ARGOFFSET/(int)sizeof(word)))
+#define VARNUM(i)		((int)((i) - (ARGOFFSET / (int) sizeof(word))))
 
 #define setLevelFrame(fr, l)	do { (fr)->level = (l); } while(0)
 #define levelFrame(fr)		((fr)->level)
