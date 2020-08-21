@@ -2156,8 +2156,29 @@ VMI(L_SMALLINT, 0, 2, (CA1_FVAR,CA1_DATA))
   NEXT_INSTRUCTION;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Actual tail call. The arguments for the   new predicate have been set by
+now. The number of arguments may be  both   more  and  less than for the
+running frame. As we may need to perform   callbacks  this is a bit of a
+problem.
+
+  - If we perform the callbacks giving the current GC context we go
+    wrong if the new predicate has more arguments than the current
+    clause has `prolog_vars`.
+  - If we first change the context to the new predicate we can perform
+    the callbacks, but we still need to fix the calling context.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
+  Module ctx0 = contextModule(FR);
+
+  leaveDefinition(DEF);
+  FR->clause = NULL;
+  DEF = proc->definition;
+  setFramePredicate(FR, DEF);
+  lTop = (LocalFrame)argFrameP(FR, DEF->functor->arity);
 
   if ( true(FR, FR_WATCHED) )
   { SAVE_REGISTERS(qid);
@@ -2166,10 +2187,7 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
     if ( exception_term )
       THROW_EXCEPTION;
   }
-  FR->clause = NULL;
-  leaveDefinition(DEF);
 
-  DEF = proc->definition;
   if ( !DEF->impl.any.defined && false(DEF, PROC_DEFINED) )
   { SAVE_REGISTERS(qid);
     DEF = getProcDefinedDefinition(DEF PASS_LD);
@@ -2177,7 +2195,7 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
   }
 
   if ( true(DEF, P_TRANSPARENT) )
-  { FR->context = contextModule(FR);
+  { FR->context = ctx0;
     FR->level++;
     clear(FR, FR_CLEAR_NEXT);
     set(FR, FR_CONTEXT);
