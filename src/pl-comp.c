@@ -2918,10 +2918,13 @@ lco(CompileInfo ci, size_t pc0)
     FIX_BUFFER_SHIFT();
   }
 
-  if ( ci->procedure ==	(Procedure)e[-1] )
+  e[-2] = encode(I_CALL);
+  Procedure depart_proc = (Procedure)e[-1];
+
+  if ( ci->procedure ==	depart_proc )
     Output_0(ci, I_TCALL);
   else
-    Output_1(ci, I_LCALL, e[-1]);
+    Output_1(ci, I_LCALL, (code)depart_proc);
 
   FIX_BUFFER_SHIFT();
 
