@@ -2160,13 +2160,9 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
 { Procedure proc = (Procedure)*PC++;
 
   if ( true(FR, FR_WATCHED) )
-  { LD->query->next_environment = lTop;
-    lTop = (LocalFrame)argFrameP(FR, proc->definition->functor->arity);
-    SAVE_REGISTERS(qid);
+  { SAVE_REGISTERS(qid);
     frameFinished(FR, FINISH_EXIT PASS_LD);
     LOAD_REGISTERS(qid);
-    lTop = LD->query->next_environment;
-    LD->query->next_environment = NULL;
     if ( exception_term )
       THROW_EXCEPTION;
   }
@@ -2175,13 +2171,9 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
 
   DEF = proc->definition;
   if ( !DEF->impl.any.defined && false(DEF, PROC_DEFINED) )
-  { LD->query->next_environment = lTop;
-    lTop = (LocalFrame)argFrameP(FR, proc->definition->functor->arity);
-    SAVE_REGISTERS(qid);
+  { SAVE_REGISTERS(qid);
     DEF = getProcDefinedDefinition(DEF PASS_LD);
     LOAD_REGISTERS(qid);
-    lTop = LD->query->next_environment;
-    LD->query->next_environment = NULL;
   }
 
   if ( true(DEF, P_TRANSPARENT) )
@@ -2200,7 +2192,15 @@ VMI(I_LCALL, 0, 1, (CA1_PROC))
 }
 
 VMI(I_TCALL, 0, 0, ())
-{ setNextFrameFlags(FR, FR);
+{ if ( true(FR, FR_WATCHED) )
+  { SAVE_REGISTERS(qid);
+    frameFinished(FR, FINISH_EXIT PASS_LD);
+    LOAD_REGISTERS(qid);
+    if ( exception_term )
+      THROW_EXCEPTION;
+  }
+
+  setNextFrameFlags(FR, FR);
   FR->clause = NULL;
   if ( true(DEF, HIDE_CHILDS) )
     set(FR, FR_HIDE_CHILDS);
