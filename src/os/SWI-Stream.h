@@ -85,7 +85,7 @@ stuff.
 #ifndef _PL_EXPORT_DONE
 #define _PL_EXPORT_DONE
 
-#if (defined(__WINDOWS__) || defined(__CYGWIN__)) && !defined(__LCC__)
+#if defined(__WINDOWS__) && !defined(__LCC__)
 #define HAVE_DECLSPEC
 #endif
 
@@ -99,7 +99,7 @@ stuff.
 #define PL_EXPORT(type)		type _stdcall
 #define PL_EXPORT_DATA(type)	extern type
 #  else
-#   ifdef __MINGW32__
+#   if defined(__MINGW32__) || defined(__CYGWIN__)
 #define PL_EXPORT(type)		extern type
 #define PL_EXPORT_DATA(type)	extern type
 #   else
